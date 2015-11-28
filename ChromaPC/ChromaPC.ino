@@ -5,21 +5,24 @@
 #define NEOPIXEL_DATA 6
 #define ONE_WIRE_BUS 2
 
-int colorMode = 2; //0=solid, 1=temp, 2=rainbow
+int colorMode; //0=solid, 1=temp, 2=rainbow
 int pulse = 0; //0=no, 1=yes
+int twinkle = 0; //0=no, 1=yes
+int strobe = 0; //0=no, 1=yes
 
 //Global params
-int animationSpeed = 25;
-int maxBrightness = 255;
+int animationSpeed;
+int maxBrightness;
 
 //Color parmas
 int r = 0;
 int g = 0;
 int b = 0;
-int tempMin = 20;
-int tempMax = 60;
+int tempMin;
+int tempMax;
 
 //Control IDs
+int colorModeID;
 int solidButton;
 int tempButton;
 int rainbowButton;
@@ -71,8 +74,7 @@ void setup() {
   sensors.begin(); // IC Default 9 bit. If you have troubles consider upping it 12. Ups the delay giving the IC more time to process the temperature measurement
 
   //Initialize GUI
-  gBegin(20855); 
-  gSetColor(255,165,0);
+  gBegin(11613); 
 }
 
 void loop() {
@@ -88,35 +90,51 @@ void loop() {
 
 void gInit()
 {
-  gAddLabel("CHROMA CONTROL",3);
+  
+  gAddLabel("CHROMA CONTROL",1);
   gAddSpacer(1);
+  
   gAddSlider(0,255,"BRIGHTNESS",&maxBrightness);
   gAddSlider(0,100,"ANIMATION SPEED", &animationSpeed);
 
-  gAddLabel("COLOR",2);
+  gAddLabel("COLOR",1);
   gAddSpacer(1);
+  char* curr;
+  if(colorMode==0){
+    curr = "CURRENT: SOLID";
+  }else if(colorMode==1){
+    curr = "CURRENT: TEMPERATURE";
+  }else if(colorMode==2){
+    curr = "CURRENT: RAINBOW";
+  }
+  colorModeID = gAddLabel(curr,1);
   solidButton = gAddButton("SOLID");
   tempButton = gAddButton("TEMPERATURE"); 
-  rainbowButton = gAddButton("CHROMA"); 
+  rainbowButton = gAddButton("RAINBOW"); 
 
-  gAddLabel("EFFECTS",2);
+  gAddLabel("EFFECTS",1);
   gAddSpacer(1);
   gAddToggle("PULSE",&pulse);
+  gAddToggle("TWINKLE (COMING SOON)",&twinkle);
+  gAddToggle("STROBE (COMING SOON)",&strobe);
 
   gAddColumn();
 
-  gAddLabel("TEMPERATURE (C)",2);
+  gAddLabel("TEMPERATURE (C)",1);
   gAddSpacer(1);
   gAddMovingGraph("CASE",20,60, &tempValue, 10);
 
-  gAddLabel("PARAMETERS",2);
+  gAddLabel("PARAMETERS",1);
+  gAddSpacer(1);
   gAddLabel("SOLID",1);
   rotaryR = gAddRotarySlider(0,255,"R",&r);
   rotaryG = gAddRotarySlider(0,255,"G",&g);
   rotaryB = gAddRotarySlider(0,255,"B",&b);
   gAddLabel("TEMPERATURE",1);
-  rotaryTempMin = gAddRotarySlider(0,255,"Min Temp",&tempMin);
-  rotaryTempMax = gAddRotarySlider(0,255,"Max Temp",&tempMax);
+  rotaryTempMin = gAddRotarySlider(20,80,"Min",&tempMin);
+  rotaryTempMax = gAddRotarySlider(20,80,"Max",&tempMax);
+  
+    gSetColor(255,165,0);
 }
 
 void gButtonPressed(int id)
@@ -126,12 +144,16 @@ void gButtonPressed(int id)
     for(uint8_t i=0; i< strip.numPixels(); i++) {
       strip.setPixelColor(i, strip.Color(r,g,b));
     } 
+    gUpdateLabel(colorModeID, "CURRENT: SOLID");
   }
   if(id == tempButton){
     colorMode = 1;
+    gUpdateLabel(colorModeID, "CURRENT: TEMPERATURE");
   }
   if(id == rainbowButton){
     colorMode = 2;
+    gUpdateLabel(colorModeID, "CURRENT: RAINBOW");
+
   }
 }
 
